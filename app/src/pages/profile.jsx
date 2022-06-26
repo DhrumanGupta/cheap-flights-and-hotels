@@ -15,7 +15,28 @@ function Profile(props) {
     return <Loading />;
   }
 
-  return <div></div>;
+  return (
+    <>
+      <div className="w-5/6 md:w-2/3 lg:w-1/2 mx-auto mt-16">
+        <h2>You are tracking the following items:</h2>
+        {data.data &&
+          data.data.map((item, i) => (
+            <div key={i} className="my-4">
+              <p>Target: {item.target}</p>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="link text-white"
+              >
+                Url
+              </a>
+            </div>
+          ))}
+      </div>
+      <input type="checkbox" id="my-modal" className="modal-toggle" />
+    </>
+  );
 }
 
 Profile.isProtected = true;
