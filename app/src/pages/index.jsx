@@ -5,7 +5,7 @@ import Search from "../components/icons/Search";
 export default function Home() {
   return (
     <>
-      <div className="form-control absolute right-1/2 translate-x-1/2 bottom-1/2 translate-y-1/2 w-3/4 sm:w-auto p-6">
+      <div className="form-control absolute right-1/2 translate-x-1/2 bottom-1/2 translate-y-1/2 w-3/4 sm:w-auto lg:w-full lg:max-w-screen-sm p-6">
         <h2 className="mb-2 text-center">Never pay high prices again</h2>
         <label className="input-group w-full">
           <input
