@@ -14,7 +14,7 @@ const worker = async () => {
     const urls = data.map((x) => x.url)
 
     // const res = await getLowestPricesForMultipleFlights(data)
-    // console.log(data)
+    // console.log(urls)
     // console.log(res)
 }
 

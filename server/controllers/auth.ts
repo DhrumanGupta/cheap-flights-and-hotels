@@ -4,6 +4,7 @@ import twilio from 'twilio'
 import jwt from 'jsonwebtoken'
 import { PrismaClient } from '@prisma/client'
 import authenticateUser from '../middleware/authenticateUser'
+import { sendMessage } from '../services/twilio'
 
 const prisma = new PrismaClient()
 
@@ -13,13 +14,7 @@ const jwtAuthToken = process.env.JWT_AUTH_TOKEN || ''
 const jwtRefreshToken = process.env.JWT_REFRESH_TOKEN || ''
 const smsKey = process.env.SMS_SECRET_KEY || ''
 
-const phoneNumber = process.env.PHONE_NUMBER || ''
-const accountSid = process.env.ACCOUNT_SID
-const authToken = process.env.AUTH_TOKEN
-
 const refreshTokens: string[] = []
-
-const twilioClient = twilio(accountSid, authToken)
 
 router.post('/sendOTP', (req: Request, res: Response) => {
     if (!req.body?.phone) {
@@ -35,13 +30,10 @@ router.post('/sendOTP', (req: Request, res: Response) => {
     const hash = crypto.createHmac('sha256', smsKey).update(data).digest('hex')
     const fullHash = `${hash}.${expires}`
 
-    twilioClient.messages
-        .create({
-            body: `Your One Time Password (OTP) for Travel Cheap is ${otp}`,
-            from: phoneNumber,
-            to: phone,
-        })
-        .catch(console.error)
+    sendMessage(
+        phone,
+        `Your One Time Password (OTP) for Travel Cheap is ${otp}`
+    ).catch(console.error)
 
     res.status(200).send({ phone, hash: fullHash })
 })
@@ -120,7 +112,7 @@ router.post('/verifyOTP', async (req: Request, res: Response) => {
     try {
         const user = await prisma.user.findFirst({ where: { phone } })
         if (!user) {
-            await prisma.user.create({ data: { phone, requests: [] } })
+            await prisma.user.create({ data: { phone } })
         }
     } catch (err) {
         console.log(err)
@@ -148,7 +140,7 @@ router.post('/logout', async (req: Request, res: Response) => {
 
 router.get('/user', authenticateUser, async (req: Request, res: Response) => {
     // @ts-ignore
-    const phone = req.phone.data
+    const phone = req.phone
 
     const user = await prisma.user.findFirst({ where: { phone } })
     if (!user) {

@@ -13,12 +13,13 @@ datasource db {
 model User {
   id          String @id @default(cuid())
   phone       String
-  request     Request[]
+  requests     Request[]
 }
 
 model Request {
   id          String @id @default(cuid())
   url         String
+  target      Float
   user        User @relation(fields: [userId], references: [id])
   userId      String 
 }
