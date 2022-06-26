@@ -18,7 +18,7 @@ const authenticateUser = async (
     jwt.verify(accessToken, jwtAuthToken, (err, phone) => {
         if (phone) {
             // @ts-ignore
-            req.phone = phone
+            req.phone = phone.data
             next()
             return
         }

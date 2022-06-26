@@ -4,6 +4,7 @@ dotenv.config()
 import express, { Express, Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import authController from './controllers/auth'
+import requestController from './controllers/request'
 import cookieParser from 'cookie-parser'
 import runWorkerTask from './worker'
 import cron from 'node-cron'
@@ -27,6 +28,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/auth', authController)
+app.use('/request', requestController)
 
 app.get('/', (req: Request, res: Response) => {
     res.send({ message: 'pong' })

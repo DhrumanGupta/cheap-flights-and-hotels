@@ -19,6 +19,7 @@ model User {
 model Request {
   id          String @id @default(cuid())
   url         String
+  target      Float
   user        User @relation(fields: [userId], references: [id])
   userId      String 
 }

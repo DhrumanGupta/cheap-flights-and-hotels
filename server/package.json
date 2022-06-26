@@ -6,7 +6,7 @@
     "scripts": {
         "build": "yarn tsc",
         "start": "node dist/index.js",
-        "dev": "ts-node-dev --respawn index.ts"
+        "dev": "ts-node-dev --exit-child --respawn index.ts"
     },
     "dependencies": {
         "@prisma/client": "^3.15.2",
