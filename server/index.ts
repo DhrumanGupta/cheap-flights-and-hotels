@@ -2,13 +2,13 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import express, { Express, Request, Response, NextFunction } from 'express'
-import { PrismaClient } from '@prisma/client'
 import cors from 'cors'
 import authController from './controllers/auth'
 import cookieParser from 'cookie-parser'
+import runWorkerTask from './worker'
+import cron from 'node-cron'
 
 const app: Express = express()
-const prisma = new PrismaClient()
 
 const port = 1337
 
@@ -18,7 +18,7 @@ app.use(
     cors({
         origin:
             prodEnv === 'development'
-                ? 'http://localhost:1337'
+                ? `http://localhost:${port}`
                 : 'https://backend.travelcheapwith.tech',
         credentials: true,
     })
@@ -35,3 +35,5 @@ app.get('/', (req: Request, res: Response) => {
 app.listen(port, () => {
     console.log(`Server is running at https://localhost:${port}`)
 })
+
+cron.schedule('*/5 0 * * *', async () => await runWorkerTask())
