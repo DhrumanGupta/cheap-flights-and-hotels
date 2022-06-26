@@ -1,5 +1,3 @@
-import Link from "../components/Utils/Link";
-import { default as NextLink } from "next/link";
 import { Fragment, useEffect, useState } from "react";
 import {
   sendOtp as loginUser,
@@ -12,6 +10,7 @@ import { TextInput, PasswordInput } from "../components/UI/Inputs";
 import Card from "../components/UI/Card";
 import { Header } from "../components/UI/Typography";
 import Button from "../components/UI/Button";
+import { useRouter } from "next/router";
 
 const LoginPrompt = ({ onLogin, message, loading }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -35,7 +34,6 @@ const LoginPrompt = ({ onLogin, message, loading }) => {
     onLogin({ phone: phoneNumber });
   };
 
-
   const errorMessage =
     message &&
     (message.response?.data
@@ -43,7 +41,10 @@ const LoginPrompt = ({ onLogin, message, loading }) => {
       : message.toJSON().message);
 
   return (
-    <div className="flex flex-col items-center justify-center my-auto flex-grow w-5/6 mx-auto">
+    <form
+      className="flex flex-col items-center justify-center my-auto flex-grow w-5/6 mx-auto"
+      onSubmit={login}
+    >
       {errorMessage && (
         <p className={"text-red-500 pb-2 font-semibold text-lg"}>
           {errorMessage}
@@ -63,7 +64,6 @@ const LoginPrompt = ({ onLogin, message, loading }) => {
 
         <div className="mt-8">
           <Button
-            onClick={login}
             disabled={loading}
             aria-label={"login to my account"}
             className={"w-full"}
@@ -81,7 +81,7 @@ const LoginPrompt = ({ onLogin, message, loading }) => {
           }}
         />
       )}
-    </div>
+    </form>
   );
 };
 
@@ -91,8 +91,10 @@ const OtpPrompt = ({ requestData }) => {
   const [message, setMessage] = useState({ error: false, value: "" });
 
   const { mutate } = useUser();
+  const router = useRouter();
 
-  const login = async () => {
+  const login = async (e) => {
+    e.preventDefault();
     if (otp.trim().length !== 6) {
       setOtpValid(false);
       return;
@@ -115,8 +117,19 @@ const OtpPrompt = ({ requestData }) => {
       });
   };
 
+  useEffect(() => {
+    if (
+      message.value === "Login successful! You will be redirected shortly.."
+    ) {
+      router.push("/");
+    }
+  }, [message]);
+
   return (
-    <div className="flex flex-col items-center justify-center my-auto flex-grow w-5/6 mx-auto">
+    <form
+      className="flex flex-col items-center justify-center my-auto flex-grow w-5/6 mx-auto"
+      onSubmit={login}
+    >
       {message.value && (
         <p
           className={`text-${
@@ -142,12 +155,10 @@ const OtpPrompt = ({ requestData }) => {
         />
 
         <div className="mt-8">
-          <Button className={"w-full"} onClick={login}>
-            Login
-          </Button>
+          <Button className={"w-full"}>Login</Button>
         </div>
       </Card>
-    </div>
+    </form>
   );
 };
 

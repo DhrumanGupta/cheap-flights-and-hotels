@@ -19,8 +19,8 @@ app.use(
     cors({
         origin:
             prodEnv === 'development'
-                ? `http://localhost:${port}`
-                : 'https://backend.travelcheapwith.tech',
+                ? `http://localhost:3000`
+                : 'https://travelcheapwith.tech',
         credentials: true,
     })
 )

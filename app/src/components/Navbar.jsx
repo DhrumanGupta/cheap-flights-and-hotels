@@ -3,6 +3,7 @@ import Link from "next/link";
 import useUser from "../hooks/useUser";
 import { authRoutes } from "../data/Routes";
 import axios from "axios";
+import { mutate } from "swr";
 
 const NavItem = ({ to, children }) => {
   return (
@@ -22,6 +23,7 @@ const LoggedInRoutes = () => {
         <p
           onClick={async () => {
             await axios.post(authRoutes.logout);
+            mutate(authRoutes.getUser);
           }}
         >
           Logout
