@@ -1,13 +1,44 @@
-import { Cluster } from 'puppeteer-cluster'
 import puppeteer from 'puppeteer'
+import {Cluster} from "puppeteer-cluster"
 
-//flight object DS:
-//itinerary (string). contains the flight departure, destination, and date. just put the itinerary param from the url the user passed here.
-//ccde (string). contains the country code to scrape the prices using a specific currency. note that after performing another search after one this param disapears. advice the user to open a new tab and search for the hotel before copying the url. just put the ccde param from the url the user passed here.
 
 interface Flight {
     itinerary: string
     ccde: string
+}
+
+interface Hotel {
+    checkin: string
+    checkout: string
+    city: string
+}
+
+export function parseURLs(urlStrings: string[]){
+    const obj: {flights: Array<Flight>, hotels: Array<Hotel>} = {flights: [], hotels: []}
+    const urls: Array<URL> =  urlStrings.map(url=>new URL(url))
+    urls.forEach(url=>{
+        url.pathname = url.pathname.replace(/\/+$/, '');
+        if (url.pathname === "/hotels/hotel-listing"){
+            obj.hotels.push({
+                checkin: url.searchParams.get("checkin")||"",
+                checkout: url.searchParams.get("checkout")||"",
+                city: url.searchParams.get("city")||""
+            })
+        }
+        if (url.pathname === "/flight/search"){
+            obj.flights.push({
+                itinerary: url.searchParams.get("itinerary")||"",
+                ccde: url.searchParams.get("ccde")||"IN"
+            })
+        }
+    })
+    obj.flights = obj.flights.filter((value, index, self)=>
+        index === self.findIndex(t=> t.ccde === value.ccde && t.itinerary === value.itinerary)
+    )
+    obj.hotels = obj.hotels.filter((value, index, self)=>
+        index === self.findIndex(t=> t.city === value.city && t.checkin === value.checkin && t.checkout === value.checkout)
+    )
+    return obj
 }
 
 export async function getLowestPricesForMultipleFlights(
@@ -71,13 +102,44 @@ export async function scrapeFlight(page, flight) {
     }
 }
 
-// Hotel not implemented yet
-// hotel object DS:
-// checkin (string). contains the checkin date in mmddyyyy. just put the checkin param from the url the user passed here.
-// checkout (string). contains the checkout date in mmddyyyy. just put the checkout param from the url the user passed here.
-// city (string). contains the city code in all caps. just put the city param from the url the user passed here.
-// export async function getLowestPricesForMultipleHotels(hotels, n = 2) {}
-// export async function getLowestPriceForHotel(hotel) {}
-// export async function scrapeHotel(page, hotel) {}
+export async function getLowestPricesForMultipleHotels(hotels: Array<Hotel>, n = 2) {
+    const prices: Array<number | null> = []
+    const cluster = await Cluster.launch({
+        concurrency: Cluster.CONCURRENCY_PAGE,
+        maxConcurrency: n,
+    })
+    await cluster.task(async ({ page, data }) => {
+        const result = await scrapeHotel(page, data.flight)
+        prices[data.index] = result
+    })
+    hotels.forEach((hotel, index) => cluster.queue({ hotel, index }))
+    await cluster.idle()
+    await cluster.close()
+    return prices
+}
+export async function getLowestPriceForHotel(hotel: Hotel) {
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+    const lowest = await scrapeHotel(page, hotel)
+    await browser.close()
+    return lowest
+}
+export async function scrapeHotel(page: puppeteer.Page, hotel: Hotel) {
+    try{
+        await page.setUserAgent(
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Safari/537.36'
+        )
+        await page.goto(`https://www.makemytrip.com/hotels/hotel-listing/?checkin=${hotel.checkin}&city=${hotel.city}&checkout=${hotel.checkout}&roomStayQualifier=2e0e&locusId=CTGOI&country=IN&locusType=city&searchText=Goa&visitorId=c36eceb2-f5b1-4a4a-a07c-3deeb30e67df&regionNearByExp=3`, {waitUntil: `networkidle0`})
+        const result = await page.evaluate(()=>{
+            // @ts-ignore
+            return document.getElementsByClassName('priceDetails')[0].childNodes[0].childNodes[0].getElementsByTagName("div")[0].childNodes[0].innerText
+        })
+        return parseFloat(result.replace(/[^0-9\.]+/g, ''))
+    }
+    catch(e) {return null}
+
+}
 
 //console.log(await getLowestPricesForMultipleFlights([{itinerary: "USH-BAH-20/10/2022"}, {itinerary: "DEL-KTM-28/07/2022_KTM-DEL-29/07/2022", ccde: "US"}, {itinerary: ""}, {itinerary: ""}, {itinerary: ""}]))
+//console.log(parseURLs(["https://www.makemytrip.com/flight/search?itinerary=DEL-KTM-01/08/2022&tripType=O&paxType=A-1_C-0_I-0&intl=true&cabinClass=E&ccde=IN&lang=eng", "https://www.makemytrip.com/hotels/hotel-listing/?checkin=06272022&city=CTGOI&checkout=06282022&roomStayQualifier=2e0e&locusId=CTGOI&country=IN&locusType=city&searchText=Goa&visitorId=c36eceb2-f5b1-4a4a-a07c-3deeb30e67df&regionNearByExp=3", "https://www.makemytrip.com/flight/search?itinerary=DEL-KTM-01/08/2022&tripType=O&paxType=A-1_C-0_I-0&intl=true&cabinClass=E&ccde=IN&lang=eng"]))
+//getLowestPriceForHotel({checkin: "06272022", checkout: "06282022", city: "CTGOI"}).then(r=>console.log(r))
