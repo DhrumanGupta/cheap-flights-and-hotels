@@ -120,7 +120,7 @@ router.post('/verifyOTP', async (req: Request, res: Response) => {
     try {
         const user = await prisma.user.findFirst({ where: { phone } })
         if (!user) {
-            await prisma.user.create({ data: { phone, requests: [] } })
+            await prisma.user.create({ data: { phone } })
         }
     } catch (err) {
         console.log(err)
