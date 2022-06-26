@@ -3,7 +3,6 @@ import { PrismaClient } from '@prisma/client'
 import authenticateUser from '../middleware/authenticateUser'
 import { sendMessage } from '../services/twilio'
 
-
 const prisma = new PrismaClient()
 const router = Router()
 
@@ -79,7 +78,10 @@ router.post('/add', authenticateUser, async (req: Request, res: Response) => {
 })
 
 router.post('/', async (req: Request, res: Response) => {
-    const res = await 
+    const url = req.body?.url
+    if (!url) {
+        return res.status(400).send({ message: 'No URL provided' })
+    }
 })
 
 router.get('/', authenticateUser, async (req: Request, res: Response) => {

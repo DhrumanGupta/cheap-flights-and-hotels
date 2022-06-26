@@ -11,7 +11,7 @@ export default function Home() {
           <input
             type="text"
             className="input input-bordered w-full"
-            placeholder="Enter your destination"
+            placeholder="Enter a link from our supported websites"
           />
           <button className="btn btn-square">
             <Search />

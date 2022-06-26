@@ -1,5 +1,4 @@
 import useSWR from "swr";
-
 import { getUser } from "../utils/userApi";
 import { authRoutes } from "../data/Routes";
 
