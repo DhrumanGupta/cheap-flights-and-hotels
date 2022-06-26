@@ -2,6 +2,11 @@ import { Router, Request, Response } from 'express'
 import { PrismaClient } from '@prisma/client'
 import authenticateUser from '../middleware/authenticateUser'
 import { sendMessage } from '../services/twilio'
+import {
+    parseURLs,
+    getLowestPriceForFlight,
+    getLowestPriceForHotel,
+} from '../scrape'
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -69,9 +74,9 @@ router.post('/add', authenticateUser, async (req: Request, res: Response) => {
     // @ts-ignore
     sendMessage(
         user?.phone,
-        `New request added for ${
-            obj.searchParams.get('itinerary') || '-'
-        }. If the price goes below ${target || '-'}, you will be notified.`
+        `New request added. If the price goes below ${
+            target || '-'
+        }, you will be notified.`
     )
 
     res.status(200).send(request)
@@ -82,6 +87,20 @@ router.post('/', async (req: Request, res: Response) => {
     if (!url) {
         return res.status(400).send({ message: 'No URL provided' })
     }
+
+    let split = parseURLs([url])
+
+    if (split.flights.length + split.hotels.length === 0) {
+        return res.status(400).send({ message: 'Invalid URL provided' })
+    }
+
+    const isFlight = split.flights.length > 0
+
+    const val = isFlight
+        ? await getLowestPriceForFlight(split.flights[0])
+        : await getLowestPriceForHotel(split.hotels[0])
+
+    return res.status(200).send({ price: val })
 })
 
 router.get('/', authenticateUser, async (req: Request, res: Response) => {
