@@ -36,4 +36,6 @@ app.listen(port, () => {
     console.log(`Server is running at https://localhost:${port}`)
 })
 
-cron.schedule('*/5 0 * * *', async () => await runWorkerTask())
+runWorkerTask().then()
+
+// cron.schedule('*/5 0 * * *', async () => await runWorkerTask())

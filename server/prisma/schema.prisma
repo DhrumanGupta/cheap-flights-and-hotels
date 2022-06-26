@@ -18,6 +18,7 @@ model User {
 
 model Requests {
   id          String @id @default(cuid())
-  url         String
+  ccde        String
+  itinerary   String
   users       User[]
 }
