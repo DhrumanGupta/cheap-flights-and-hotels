@@ -7,13 +7,15 @@ dotenv.config()
 const prisma = new PrismaClient()
 
 const worker = async () => {
-    const data = await prisma.requests.findMany({
-        select: { ccde: true, itinerary: true },
+    const data = await prisma.request.findMany({
+        select: { url: true },
     })
 
-    const res = await getLowestPricesForMultipleFlights(data)
-    console.log(data)
-    console.log(res)
+    const urls = data.map((x) => x.url)
+
+    // const res = await getLowestPricesForMultipleFlights(data)
+    // console.log(data)
+    // console.log(res)
 }
 
 export default worker
